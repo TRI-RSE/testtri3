@@ -39,7 +39,7 @@ jobs:
           python-version: "3.11"
 
       - name: Release and Dispatch
-        uses: tri-ie/python-lib-release-publish-pypi@main
+        uses: TRI-Actions/python-lib-release-publish-pypi@main
         with:
           bump: ${{ inputs.bump || 'patch' }}
           version: ${{ inputs.version || '' }}
