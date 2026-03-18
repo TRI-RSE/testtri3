@@ -1,0 +1,49 @@
+name: Release (GitHub + Dispatch to Publisher)
+
+on:
+  push:
+    branches: [publish]
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Version bump type"
+        required: true
+        default: patch
+        type: choice
+        options: [patch, minor, major]
+      version:
+        description: "Optional explicit version (e.g., 1.2.3). If set, bump is ignored."
+        required: false
+        type: string
+
+permissions:
+  contents: write   # needed to push tags + create GitHub Releases
+
+jobs:
+  release:
+    environment: release
+    runs-on: ubuntu-latest
+
+    # Manual trigger safety: only allow running on publish branch
+    if: github.ref == 'refs/heads/publish'
+
+    steps:
+      - name: Checkout (full history + tags)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Release and Dispatch
+        uses: tri-ie/python-lib-release-publish-pypi@main
+        with:
+          bump: ${{ inputs.bump || 'patch' }}
+          version: ${{ inputs.version || '' }}
+          subdir: ""
+          dispatch_token: ${{ secrets.PUBLISH_DISPATCH_TOKEN }}
+          initiated_by: ${{ github.triggering_actor || github.actor }}
+          source_run_url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
